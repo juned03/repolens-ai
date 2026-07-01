@@ -1,0 +1,99 @@
+---
+description: RepoLens AI development standards — architecture, stack, and coding conventions
+alwaysApply: true
+---
+
+# RepoLens AI Development Rules
+
+## Project Goal
+
+You are helping build RepoLens AI — a production-inspired AI-powered Code Documentation Assistant (take-home assignment).
+
+Optimize for **readability and maintainability**, not complexity. Demonstrate excellent engineering practices with a clean, scalable application.
+
+## Approved Tech Stack
+
+Do not introduce additional technologies unless explicitly requested.
+
+| Layer | Technologies |
+|-------|-------------|
+| Framework | Next.js App Router, React, TypeScript |
+| Styling | Tailwind CSS, shadcn/ui |
+| AI | OpenAI, GPT-4o-mini, text-embedding-3-small |
+| Vector DB | Qdrant |
+| Metadata DB | SQLite, Drizzle ORM |
+| Parsing | Tree-sitter |
+| Validation | Zod |
+| Testing | Vitest |
+
+## Architecture
+
+Follow this dependency flow — never violate it:
+
+```
+UI → API Routes → Services → Repositories → Database / External Clients
+```
+
+- Business logic must **never** exist inside Route Handlers.
+- API Routes should only: validate requests, call services, return responses.
+
+## Folder Responsibilities
+
+| Directory | Purpose |
+|-----------|---------|
+| `app/` | Pages, layouts, API routes only — no business logic |
+| `components/` | Reusable UI components |
+| `features/` | Feature-specific UI |
+| `server/services/` | Business logic |
+| `server/repositories/` | SQLite access only |
+| `server/clients/` | External services (OpenAI, Qdrant) |
+| `lib/` | Pure helper utilities |
+| `config/` | Application configuration |
+| `types/` | Shared TypeScript types |
+
+## TypeScript
+
+- Strict typing always; never use `any`.
+- Prefer explicit return types.
+- Interfaces for shared models; type aliases for unions.
+
+## Code Style
+
+Small functions, single responsibility, readable naming. Avoid nested conditionals. Extract reusable helpers; avoid duplicated logic.
+
+## Validation
+
+Every API request must be validated with Zod. Never trust client input.
+
+## Error Handling
+
+Never swallow errors. Return meaningful error responses. Log unexpected exceptions.
+
+## UI
+
+- shadcn/ui + Tailwind CSS only — no inline styles.
+- Every page: loading state, empty state, error state.
+- Dark mode compatible.
+
+## Performance
+
+Batch embedding requests. Stream AI responses. Avoid loading entire repositories into memory. Reuse existing utilities.
+
+## Security
+
+- Validate uploaded ZIP files; prevent Zip Slip attacks.
+- Ignore: `node_modules`, `.git`, `build`, `dist`.
+- Reject unsupported file types.
+
+## Comments
+
+Only explain **why** — do not comment obvious code.
+
+## AI Behaviour
+
+Before generating implementation code:
+
+1. Briefly explain the approach.
+2. Mention any important trade-offs.
+
+Never create unnecessary files. Do not over-engineer. Follow the agreed architecture. If an architectural decision is unclear, ask before changing it.
