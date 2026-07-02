@@ -1,1 +1,5 @@
-// TODO: POST streaming RAG chat — validate input, delegate to RAG service, return SSE stream.
+import { NextResponse } from "next/server";
+
+export function POST() {
+  return NextResponse.json({ message: "Not implemented" }, { status: 501 });
+}

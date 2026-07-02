@@ -1,1 +1,9 @@
-// TODO: App shell layout wrapping authenticated routes with sidebar navigation and theme support.
+import { AppShell } from "@/components/layout/app-shell";
+
+export default function AppLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return <AppShell>{children}</AppShell>;
+}

@@ -1,1 +1,3 @@
-// TODO: Chat page for asking questions about a repository with streaming responses.
+export default function RepositoryChatPage() {
+  return null;
+}

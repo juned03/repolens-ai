@@ -1,1 +1,8 @@
-// TODO: POST multipart ZIP upload — validate input, delegate to ingestion service, return repoId.
+import { NextResponse } from "next/server";
+
+export async function POST() {
+  return NextResponse.json(
+    { message: "Not implemented" },
+    { status: 501 }
+  );
+}
