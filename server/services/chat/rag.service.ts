@@ -1,5 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { generateText, streamText } from "ai";
 
 import { getOpenAIConfig } from "@/config/env";
 import {
@@ -65,4 +65,30 @@ export async function answerRepositoryQuestion(
     answer: text,
     retrievedChunks,
   };
+}
+
+export interface StreamRagResult {
+  stream: ReturnType<typeof streamText>;
+  retrievedChunks: RetrievedChunk[];
+}
+
+export async function streamRepositoryAnswer(
+  repositoryId: string,
+  question: string,
+): Promise<StreamRagResult> {
+  const retrievedChunks = await retrieveRelevantChunks(
+    repositoryId,
+    question,
+  );
+
+  const { apiKey } = getOpenAIConfig();
+  const model = createOpenAI({ apiKey })(CHAT_MODEL_ID);
+
+  const stream = streamText({
+    model,
+    system: SYSTEM_PROMPT,
+    prompt: buildUserPrompt(retrievedChunks, question),
+  });
+
+  return { stream, retrievedChunks };
 }
