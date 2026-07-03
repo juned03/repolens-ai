@@ -83,8 +83,23 @@ export async function POST(request: Request): Promise<NextResponse> {
     return validationErrorResponse(validation.error);
   }
 
+  let fileBuffer: Buffer;
+
   try {
-    const repository = startUpload({ fileName: validation.data.fileName });
+    fileBuffer = Buffer.from(await file.arrayBuffer());
+  } catch (error) {
+    console.error("Failed to read uploaded file:", error);
+    return NextResponse.json(
+      { error: "Failed to read uploaded file" },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const repository = await startUpload({
+      fileName: validation.data.fileName,
+      fileBuffer,
+    });
 
     return NextResponse.json({
       repositoryId: repository.id,

@@ -44,6 +44,27 @@ export function updateRepositoryStatus(
   return repository ?? null;
 }
 
+export interface RepositoryUpdate {
+  status?: RepositoryStatus;
+  errorMessage?: string | null;
+  fileCount?: number;
+  totalFiles?: number;
+}
+
+export function updateRepository(
+  id: string,
+  data: RepositoryUpdate,
+): Repository | null {
+  const repository = db
+    .update(repositories)
+    .set(data)
+    .where(eq(repositories.id, id))
+    .returning()
+    .get();
+
+  return repository ?? null;
+}
+
 export function deleteRepository(id: string): void {
   db.delete(repositories).where(eq(repositories.id, id)).run();
 }
