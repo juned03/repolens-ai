@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:chunking": "npx tsx scripts/test-chunking.ts"
+    "test:chunking": "npx tsx scripts/test-chunking.ts",
+    "test:embeddings": "npx tsx scripts/test-embeddings.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.5",
