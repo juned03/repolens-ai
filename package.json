@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test:chunking": "npx tsx scripts/test-chunking.ts",
-    "test:embeddings": "npx tsx scripts/test-embeddings.ts"
+    "test:embeddings": "npx tsx scripts/test-embeddings.ts",
+    "test:qdrant": "npx tsx scripts/test-qdrant.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.5",
