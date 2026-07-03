@@ -2,7 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { IGNORED_DIRECTORY_NAMES } from "@/config/ingestion";
-import { isSupportedSourceFile } from "@/server/services/ingestion/file-filter";
+import {
+  isMacOsMetadataPath,
+  isSupportedSourceFile,
+} from "@/server/services/ingestion/file-filter";
 import { getRepositoryDir } from "@/server/services/ingestion/file-store";
 
 const DISCOVERY_IGNORED_DIRECTORIES = new Set([
@@ -57,6 +60,10 @@ async function walkDirectory(
     }
 
     const relativePath = toRepositoryRelativePath(repositoryDir, absolutePath);
+
+    if (isMacOsMetadataPath(relativePath)) {
+      continue;
+    }
 
     if (!isSupportedSourceFile(relativePath)) {
       continue;

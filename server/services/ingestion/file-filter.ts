@@ -20,6 +20,19 @@ export function hasIgnoredDirectory(segments: string[]): boolean {
   );
 }
 
+export function isMacOsMetadataPath(relativePath: string): boolean {
+  const normalizedPath = normalizeZipEntryPath(relativePath);
+  const segments = getZipEntrySegments(normalizedPath);
+
+  if (hasIgnoredDirectory(segments)) {
+    return true;
+  }
+
+  const baseName = path.posix.basename(normalizedPath);
+
+  return baseName.startsWith("._");
+}
+
 export function isSupportedSourceFile(relativePath: string): boolean {
   const normalizedPath = normalizeZipEntryPath(relativePath);
   const baseName = path.posix.basename(normalizedPath).toLowerCase();
@@ -44,9 +57,7 @@ export function shouldExtractEntry(entryPath: string): boolean {
     return false;
   }
 
-  const segments = getZipEntrySegments(normalizedPath);
-
-  if (hasIgnoredDirectory(segments)) {
+  if (isMacOsMetadataPath(normalizedPath)) {
     return false;
   }
 

@@ -4,6 +4,7 @@ export const IGNORED_DIRECTORY_NAMES = new Set([
   "dist",
   "build",
   "coverage",
+  "__macosx",
 ]);
 
 export const SUPPORTED_SOURCE_EXTENSIONS = new Set([
