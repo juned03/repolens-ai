@@ -10,7 +10,8 @@
     "test:chunking": "npx tsx scripts/test-chunking.ts",
     "test:embeddings": "npx tsx scripts/test-embeddings.ts",
     "test:qdrant": "npx tsx scripts/test-qdrant.ts",
-    "test:retrieval": "npx tsx scripts/test-retrieval.ts"
+    "test:retrieval": "npx tsx scripts/test-retrieval.ts",
+    "test:rag": "npx tsx scripts/test-rag.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.5",
