@@ -1,6 +1,6 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
 
-import { env } from "@/config/env";
+import { getQdrantConfig } from "@/config/env";
 
 /** OpenAI text-embedding-3-small vector dimensions. */
 export const EMBEDDING_VECTOR_SIZE = 1536;
@@ -9,7 +9,7 @@ export const EMBEDDING_VECTOR_SIZE = 1536;
 export const CODE_CHUNKS_COLLECTION = "code_chunks";
 
 function createQdrantClient(): QdrantClient {
-  return new QdrantClient({ url: env.qdrantUrl });
+  return new QdrantClient({ url: getQdrantConfig().url });
 }
 
 const globalForQdrant = globalThis as typeof globalThis & {

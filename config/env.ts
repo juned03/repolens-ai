@@ -1,15 +1,6 @@
 import { z } from "zod";
 
-const envSchema = z.object({
-  openaiApiKey: z
-    .string({
-      error: "OPENAI_API_KEY is required",
-    })
-    .min(1, "OPENAI_API_KEY is required"),
-  qdrantUrl: z
-    .string()
-    .url("QDRANT_URL must be a valid URL")
-    .default("http://localhost:6333"),
+const coreEnvSchema = z.object({
   databaseUrl: z.string().min(1).default("./data/repolens.db"),
   dataDir: z.string().min(1).default("./data"),
   maxUploadSizeMb: z.coerce
@@ -24,7 +15,16 @@ const envSchema = z.object({
     .default(500),
 });
 
-export type Env = z.infer<typeof envSchema>;
+const qdrantUrlSchema = z.string().url("QDRANT_URL must be a valid URL");
+
+/** Application configuration validated at startup. */
+export type Env = z.infer<typeof coreEnvSchema>;
+
+/** Configuration required for AI features (embeddings, LLM, vector search). */
+export interface AIConfig {
+  openaiApiKey: string;
+  qdrantUrl: string;
+}
 
 function formatValidationError(error: z.ZodError): string {
   const lines = error.issues.map((issue) => {
@@ -35,10 +35,22 @@ function formatValidationError(error: z.ZodError): string {
   return ["Invalid environment configuration:", ...lines].join("\n");
 }
 
-function parseEnv(): Env {
-  const result = envSchema.safeParse({
-    openaiApiKey: process.env.OPENAI_API_KEY,
-    qdrantUrl: process.env.QDRANT_URL,
+function validateOptionalAIEnvFormat(): void {
+  const qdrantUrl = process.env.QDRANT_URL;
+
+  if (qdrantUrl !== undefined && qdrantUrl.length > 0) {
+    const result = qdrantUrlSchema.safeParse(qdrantUrl);
+
+    if (!result.success) {
+      throw new Error(formatValidationError(result.error));
+    }
+  }
+}
+
+function parseCoreEnv(): Env {
+  validateOptionalAIEnvFormat();
+
+  const result = coreEnvSchema.safeParse({
     databaseUrl: process.env.DATABASE_URL,
     dataDir: process.env.DATA_DIR,
     maxUploadSizeMb: process.env.MAX_UPLOAD_SIZE_MB,
@@ -52,4 +64,35 @@ function parseEnv(): Env {
   return result.data;
 }
 
-export const env: Env = parseEnv();
+export const env: Env = parseCoreEnv();
+
+export function getOpenAIConfig(): { apiKey: string } {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is required for AI features");
+  }
+
+  return { apiKey };
+}
+
+export function getQdrantConfig(): { url: string } {
+  const rawUrl = process.env.QDRANT_URL ?? "http://localhost:6333";
+  const result = qdrantUrlSchema.safeParse(rawUrl);
+
+  if (!result.success) {
+    throw new Error(formatValidationError(result.error));
+  }
+
+  return { url: result.data };
+}
+
+export function requireAIConfig(): AIConfig {
+  const { apiKey } = getOpenAIConfig();
+  const { url } = getQdrantConfig();
+
+  return {
+    openaiApiKey: apiKey,
+    qdrantUrl: url,
+  };
+}
