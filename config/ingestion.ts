@@ -59,6 +59,13 @@ export const SUPPORTED_SOURCE_EXTENSIONS = new Set([
 export const SUPPORTED_SPECIAL_FILENAMES = new Set([
   "dockerfile",
   "makefile",
-  ".gitignore",
   ".env.example",
+]);
+
+export const IGNORED_FILENAMES = new Set([
+  "package-lock.json",
+  "yarn.lock",
+  "pnpm-lock.yaml",
+  "bun.lockb",
+  ".gitignore",
 ]);

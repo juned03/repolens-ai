@@ -70,13 +70,21 @@ export interface IndexResult {
 }
 
 export async function indexRepositoryChunks(
+  repositoryId: string,
   chunksWithEmbeddings: ChunkEmbedding[],
 ): Promise<IndexResult> {
+  await ensureQdrantCollection();
+
+  await qdrantClient.delete(CODE_CHUNKS_COLLECTION, {
+    wait: true,
+    filter: {
+      must: [{ key: "repositoryId", match: { value: repositoryId } }],
+    },
+  });
+
   if (chunksWithEmbeddings.length === 0) {
     return { pointsIndexed: 0 };
   }
-
-  await ensureQdrantCollection();
 
   const points = chunksWithEmbeddings.map(toPoint);
 

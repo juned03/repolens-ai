@@ -23,7 +23,7 @@ async function main(): Promise<void> {
   const embeddings = await generateEmbeddings(chunks);
 
   console.log("Indexing into Qdrant...\n");
-  const { pointsIndexed } = await indexRepositoryChunks(embeddings);
+  const { pointsIndexed } = await indexRepositoryChunks(repositoryId, embeddings);
 
   console.log(`Repository ID: ${repositoryId}`);
   console.log(`Files discovered: ${results.length}`);

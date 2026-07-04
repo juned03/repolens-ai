@@ -2,6 +2,7 @@ import path from "node:path";
 
 import {
   IGNORED_DIRECTORY_NAMES,
+  IGNORED_FILENAMES,
   SUPPORTED_SOURCE_EXTENSIONS,
   SUPPORTED_SPECIAL_FILENAMES,
 } from "@/config/ingestion";
@@ -36,6 +37,10 @@ export function isMacOsMetadataPath(relativePath: string): boolean {
 export function isSupportedSourceFile(relativePath: string): boolean {
   const normalizedPath = normalizeZipEntryPath(relativePath);
   const baseName = path.posix.basename(normalizedPath).toLowerCase();
+
+  if (IGNORED_FILENAMES.has(baseName)) {
+    return false;
+  }
 
   if (SUPPORTED_SPECIAL_FILENAMES.has(baseName)) {
     return true;
