@@ -203,20 +203,69 @@ function generateSemanticChunks(
     return generateLineChunks(sourceText, metadata);
   }
 
-  return semanticNodes.map((node, index) => {
-    const startLine = node.startPosition.row + 1;
-    const endLine = node.endPosition.row + 1;
+  const totalLines = sourceText.split("\n").length;
 
-    return {
+  const semanticChunks = semanticNodes.map((node) => ({
+    startLine: node.startPosition.row + 1,
+    endLine: node.endPosition.row + 1,
+  }));
+
+  const gapRanges = findGapRanges(semanticChunks, totalLines);
+
+  const allRanges = [
+    ...semanticChunks.map((range) => ({ ...range, kind: "semantic" as const })),
+    ...gapRanges.map((range) => ({ ...range, kind: "gap" as const })),
+  ].sort((left, right) => left.startLine - right.startLine);
+
+  const chunks: SourceChunk[] = [];
+
+  for (let index = 0; index < allRanges.length; index++) {
+    const range = allRanges[index];
+    const content = extractLines(sourceText, range.startLine, range.endLine);
+
+    if (content.trim().length === 0) {
+      continue;
+    }
+
+    chunks.push({
       repositoryId: metadata.repositoryId,
       filePath: metadata.filePath,
       language: metadata.language,
-      chunkIndex: index,
-      startLine,
-      endLine,
-      content: extractLines(sourceText, startLine, endLine),
-    };
-  });
+      chunkIndex: chunks.length,
+      startLine: range.startLine,
+      endLine: range.endLine,
+      content,
+    });
+  }
+
+  return chunks;
+}
+
+interface LineRange {
+  startLine: number;
+  endLine: number;
+}
+
+function findGapRanges(
+  coveredRanges: LineRange[],
+  totalLines: number,
+): LineRange[] {
+  const gaps: LineRange[] = [];
+  let cursor = 1;
+
+  for (const range of coveredRanges) {
+    if (cursor < range.startLine) {
+      gaps.push({ startLine: cursor, endLine: range.startLine - 1 });
+    }
+
+    cursor = Math.max(cursor, range.endLine + 1);
+  }
+
+  if (cursor <= totalLines) {
+    gaps.push({ startLine: cursor, endLine: totalLines });
+  }
+
+  return gaps;
 }
 
 export function generateChunks(parsedFile: ParsedFileInput): SourceChunk[] {
