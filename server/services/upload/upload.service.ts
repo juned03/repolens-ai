@@ -1,13 +1,16 @@
 import { randomUUID } from "node:crypto";
 
 import { env } from "@/config/env";
-import type { Repository } from "@/server/db/schema";
+import type { Repository, RepositoryStatus } from "@/server/db/schema";
 import {
   createRepository,
   updateRepository,
 } from "@/server/repositories/repository.repo";
+import { generateEmbeddings } from "@/server/services/embedding/embedding.service";
 import { removeRepositoryDir } from "@/server/services/ingestion/file-store";
 import { extractZip } from "@/server/services/ingestion/zip-extractor";
+import { discoverRepositoryFiles } from "@/server/services/parsing/parser.service";
+import { indexRepositoryChunks } from "@/server/services/vector/vector-index.service";
 
 export interface UploadInput {
   fileName: string;
@@ -22,6 +25,20 @@ function generateRepositoryName(fileName: string): string {
 
 function getMaxExtractedBytes(): number {
   return env.maxUploadSizeMb * 1024 * 1024;
+}
+
+function transitionStatus(
+  repositoryId: string,
+  status: RepositoryStatus,
+  data?: Record<string, unknown>,
+): Repository {
+  const updated = updateRepository(repositoryId, { status, ...data });
+
+  if (!updated) {
+    throw new Error(`Failed to transition repository to "${status}"`);
+  }
+
+  return updated;
 }
 
 export async function startUpload(input: UploadInput): Promise<Repository> {
@@ -39,13 +56,9 @@ export async function startUpload(input: UploadInput): Promise<Repository> {
     chunksIndexed: 0,
   });
 
-  const extracting = updateRepository(repository.id, { status: "extracting" });
-
-  if (!extracting) {
-    throw new Error("Failed to update repository status");
-  }
-
   try {
+    transitionStatus(repository.id, "extracting");
+
     const extraction = await extractZip({
       repositoryId: repository.id,
       zipBuffer: input.fileBuffer,
@@ -53,35 +66,39 @@ export async function startUpload(input: UploadInput): Promise<Repository> {
       maxExtractedBytes: getMaxExtractedBytes(),
     });
 
-    const ready = updateRepository(repository.id, {
-      status: "ready",
-      errorMessage: null,
-      fileCount: extraction.fileCount,
+    transitionStatus(repository.id, "parsing", {
       totalFiles: extraction.fileCount,
     });
 
-    if (!ready) {
-      throw new Error("Failed to update repository after extraction");
-    }
+    const parseResults = await discoverRepositoryFiles(repository.id);
+    const chunks = parseResults.flatMap((result) => result.chunks);
 
-    return ready;
+    transitionStatus(repository.id, "embedding", {
+      fileCount: parseResults.length,
+      filesProcessed: parseResults.length,
+      chunkCount: chunks.length,
+    });
+
+    const embeddings = await generateEmbeddings(chunks);
+    const { pointsIndexed } = await indexRepositoryChunks(
+      repository.id,
+      embeddings,
+    );
+
+    return transitionStatus(repository.id, "ready", {
+      errorMessage: null,
+      chunksIndexed: pointsIndexed,
+    });
   } catch (error) {
     await removeRepositoryDir(repository.id).catch((cleanupError) => {
       console.error("Failed to clean up extracted files:", cleanupError);
     });
 
     const message =
-      error instanceof Error ? error.message : "ZIP extraction failed";
+      error instanceof Error ? error.message : "Upload processing failed";
 
-    const failed = updateRepository(repository.id, {
-      status: "failed",
+    return transitionStatus(repository.id, "failed", {
       errorMessage: message,
     });
-
-    if (!failed) {
-      throw new Error("Failed to mark repository as failed");
-    }
-
-    return failed;
   }
 }

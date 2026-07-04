@@ -56,7 +56,6 @@ export function useUpload(): UseUploadResult {
         }
 
         router.push("/repositories");
-        router.refresh();
         return true;
       } catch {
         setError("Upload failed. Please try again.");

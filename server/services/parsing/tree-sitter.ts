@@ -1,18 +1,22 @@
-import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
 
-import { Language, Parser, type Tree } from "web-tree-sitter";
+import type { Tree } from "web-tree-sitter";
 
 import { getRepositoryDir } from "@/server/services/ingestion/file-store";
 
-const require = createRequire(import.meta.url);
+function getWasmDirectory(): string {
+  return path.join(process.cwd(), "node_modules", "tree-sitter-wasms", "out");
+}
 
-const WASM_DIRECTORY = path.dirname(
-  require.resolve("tree-sitter-wasms/out/tree-sitter-javascript.wasm"),
-);
-
-const RUNTIME_WASM_PATH = require.resolve("web-tree-sitter/tree-sitter.wasm");
+function getRuntimeWasmPath(): string {
+  return path.join(
+    process.cwd(),
+    "node_modules",
+    "web-tree-sitter",
+    "tree-sitter.wasm",
+  );
+}
 
 interface GrammarSpec {
   grammarFile: string;
@@ -75,20 +79,32 @@ export interface ParseSourceFileResult {
   sourceText: string;
 }
 
+type ParserModule = typeof import("web-tree-sitter");
+
+let treeSitterModule: ParserModule | null = null;
 let parserInitPromise: Promise<void> | null = null;
-let sharedParser: Parser | null = null;
-const languageCache = new Map<string, Language>();
+let sharedParser: InstanceType<ParserModule["Parser"]> | null = null;
+const languageCache = new Map<string, InstanceType<ParserModule["Language"]>>();
+
+async function getTreeSitter(): Promise<ParserModule> {
+  if (!treeSitterModule) {
+    treeSitterModule = await import("web-tree-sitter");
+  }
+  return treeSitterModule;
+}
 
 function resolveGrammar(extension: string): GrammarSpec | null {
   return EXTENSION_TO_GRAMMAR[extension.toLowerCase()] ?? null;
 }
 
-async function ensureParserInitialized(): Promise<Parser> {
+async function ensureParserInitialized(): Promise<InstanceType<ParserModule["Parser"]>> {
+  const { Parser } = await getTreeSitter();
+
   if (!parserInitPromise) {
     parserInitPromise = Parser.init({
       locateFile(scriptName: string) {
         if (scriptName.endsWith(".wasm")) {
-          return RUNTIME_WASM_PATH;
+          return getRuntimeWasmPath();
         }
 
         return scriptName;
@@ -105,7 +121,7 @@ async function ensureParserInitialized(): Promise<Parser> {
   return sharedParser;
 }
 
-async function loadLanguage(grammarFile: string): Promise<Language | null> {
+async function loadLanguage(grammarFile: string): Promise<InstanceType<ParserModule["Language"]> | null> {
   const cachedLanguage = languageCache.get(grammarFile);
 
   if (cachedLanguage) {
@@ -113,7 +129,8 @@ async function loadLanguage(grammarFile: string): Promise<Language | null> {
   }
 
   try {
-    const wasmPath = path.join(WASM_DIRECTORY, `tree-sitter-${grammarFile}.wasm`);
+    const { Language } = await getTreeSitter();
+    const wasmPath = path.join(getWasmDirectory(), `tree-sitter-${grammarFile}.wasm`);
     const wasmBytes = await fs.promises.readFile(wasmPath);
     const language = await Language.load(wasmBytes);
 

@@ -129,12 +129,12 @@ export function UploadDropzone() {
 
         <p className="text-base font-medium">
           {isUploading
-            ? "Uploading repository..."
+            ? "Processing repository..."
             : "Drag and drop your repository ZIP here"}
         </p>
         <p className="mt-2 max-w-sm text-sm text-muted-foreground">
           {isUploading
-            ? "Creating repository metadata. You will be redirected shortly."
+            ? "Extracting, parsing, and indexing your code. You will be redirected to chat when ready."
             : "Or click to browse. ZIP archives up to " +
               `${DEFAULT_MAX_UPLOAD_SIZE_MB} MB are supported.`}
         </p>
@@ -155,8 +155,8 @@ export function UploadDropzone() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
-          Only .zip files are accepted. Indexing begins after upload in a future
-          milestone.
+          Only .zip files are accepted. Your repository will be indexed
+          automatically.
         </p>
         <Button
           type="button"
@@ -167,7 +167,7 @@ export function UploadDropzone() {
           {isUploading ? (
             <>
               <Loader2 className="animate-spin" />
-              Uploading...
+              Processing...
             </>
           ) : (
             <>

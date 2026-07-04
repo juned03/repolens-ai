@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
+import { MarkdownMessage } from "./markdown-message";
 import type { ChatMessage } from "./use-chat-stream";
 
 interface MessageListProps {
@@ -31,14 +32,18 @@ function ChatMessageBubble({ message }: { message: ChatMessage }) {
 
       <div
         className={cn(
-          "max-w-[80%] rounded-xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap",
+          "max-w-[80%] rounded-xl px-4 py-2.5 text-sm leading-relaxed",
           isUser
-            ? "bg-primary text-primary-foreground"
+            ? "bg-primary text-primary-foreground whitespace-pre-wrap"
             : "bg-muted text-foreground",
         )}
       >
-        {message.content || (
+        {!message.content ? (
           <Loader2 className="size-4 animate-spin text-muted-foreground" />
+        ) : isUser ? (
+          message.content
+        ) : (
+          <MarkdownMessage content={message.content} />
         )}
       </div>
     </div>

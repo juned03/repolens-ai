@@ -65,6 +65,19 @@ function toPoint(item: ChunkEmbedding) {
   };
 }
 
+export async function deleteRepositoryVectors(
+  repositoryId: string,
+): Promise<void> {
+  await ensureQdrantCollection();
+
+  await qdrantClient.delete(CODE_CHUNKS_COLLECTION, {
+    wait: true,
+    filter: {
+      must: [{ key: "repositoryId", match: { value: repositoryId } }],
+    },
+  });
+}
+
 export interface IndexResult {
   pointsIndexed: number;
 }
