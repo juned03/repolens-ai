@@ -2,17 +2,25 @@
 
 An AI-powered Code Documentation Assistant that lets you upload a source code repository, automatically indexes it with semantic understanding, and answers natural-language questions about the codebase — with every answer grounded in the actual source code and cited back to specific files and line ranges.
 
-Built as part of an AI Full Stack Engineering assignment.
+Built as part of an AI Full Stack Engineering take-home assignment demonstrating Retrieval-Augmented Generation (RAG), semantic code indexing, and conversational code understanding.
+
+## Demo
+
+### Video Walkthrough
+
+> Video: https://drive.google.com/file/d/1R2gSmdpfjvqVCrys4g_qseTjom3Zrxxg/view?usp=sharing
 
 ---
 
 ## Table of Contents
 
+- [Demo](#demo)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
 - [Installation](#installation)
+- [Quick Start](#quick-start)
 - [Environment Variables](#environment-variables)
 - [How It Works](#how-it-works)
 - [RAG Design Decisions](#rag-design-decisions)
@@ -178,14 +186,14 @@ repolens-ai/
 ### Prerequisites
 
 - Node.js 20+
-- Docker (for Qdrant)
-- OpenAI API key
+- Docker Desktop (required for the local Qdrant instance)
+- OpenAI API Key
 
 ### Steps
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/repolens-ai.git
+git clone https://github.com/<your-github-username>/repolens-ai.git
 cd repolens-ai
 
 # Install dependencies
@@ -193,19 +201,54 @@ npm install
 
 # Copy environment variables
 cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
+```
 
+Edit `.env` and add your own `OPENAI_API_KEY` before starting the application.
+
+```bash
 # Start Qdrant
 docker compose up -d
 
 # Run database migrations
 npx drizzle-kit push
+```
 
+SQLite will automatically create the local database (`data/repolens.db`) on first run.
+
+```bash
 # Start the development server
 npm run dev
 ```
 
 The app will be available at `http://localhost:3000`.
+
+### Qdrant
+
+The application uses a local Qdrant instance running through Docker.
+
+Default endpoint:
+
+```
+http://localhost:6333
+```
+
+---
+
+## Quick Start
+
+```bash
+npm install
+
+cp .env.example .env
+
+# Add your OpenAI API key
+
+docker compose up -d
+
+npx drizzle-kit push
+
+npm run dev
+```
 
 ---
 
@@ -387,16 +430,39 @@ Each script runs the pipeline up to its stage and prints diagnostic output (coun
 
 ## Screenshots
 
-> Screenshots will be added here.
+### Landing Page
 
-| View | Screenshot |
-|---|---|
-| Landing Page | *Coming soon* |
-| Upload | *Coming soon* |
-| Repository List | *Coming soon* |
-| Chat Interface | *Coming soon* |
-| Markdown Response | *Coming soon* |
-| Dark Mode | *Coming soon* |
+![Landing Page](<docs/screenshots/Screenshot 2026-07-04 at 9.18.58 PM.png>)
+
+---
+
+### Upload Repository
+
+![Upload Repository](<docs/screenshots/Screenshot 2026-07-04 at 9.19.46 PM.png>)
+
+---
+
+### Repository List
+
+![Repository List](<docs/screenshots/Screenshot 2026-07-04 at 9.20.27 PM.png>)
+
+---
+
+### Chat Interface
+
+![Chat Interface](<docs/screenshots/Screenshot 2026-07-04 at 9.20.37 PM.png>)
+
+---
+
+### Markdown Rendering
+
+![Markdown Rendering](<docs/screenshots/Screenshot 2026-07-04 at 9.21.02 PM.png>)
+
+---
+
+### Dark Mode
+
+![Dark Mode](<docs/screenshots/Screenshot 2026-07-04 at 9.22.20 PM.png>)
 
 ---
 
